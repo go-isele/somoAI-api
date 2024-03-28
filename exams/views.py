@@ -14,7 +14,7 @@ from api.mixins import ApiAuthMixin
 from .utils import upload_file, generate_completion, process_answer, gemini_completion
 
 from exams.models import Exam, AnswerFile, StudentExam
-from exams.serializer import ExamSerializer, AnswerFileSerializer, StudentExamSerializer
+from exams.serializer import ExamSerializer, AnswerFileSerializer, StudentExamSerializer, ExamDocumentSerializer
 
 
 class ExamView(ApiAuthMixin, APIView):
@@ -34,6 +34,25 @@ class ExamView(ApiAuthMixin, APIView):
             serializer.save(created_by=created_by)  # Assign the current user as the creator
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ExamDocumentUploadView(APIView):
+    parser_class = (FileUploadParser, JSONParser)
+
+    def post(self, request, *args, **kwargs):
+        serializer = ExamDocumentSerializer(data=request.data)
+        if serializer.is_valid():
+            document = serializer.validated_data['document']
+            # Save the document to your Exam model or perform any other actions
+            exam = Exam.objects.create(document=document)
+            return Response(
+                {
+                    'message': 'Exam document uploaded successfully'
+                },
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AnswerFileAPIView(ApiAuthMixin, APIView):

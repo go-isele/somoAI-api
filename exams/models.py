@@ -12,6 +12,7 @@ class Exam(models.Model):
     subject = models.CharField(_("subject"), max_length=100)
     date = models.DateField(_("exam date"))
     total_marks = models.IntegerField(default=0, blank=True, null=True)
+    document = models.FileField(upload_to='exam_documents/', blank=True, null=True)
     marking_scheme = models.TextField(_("marking scheme"), blank=True)
 
     def __str__(self):
