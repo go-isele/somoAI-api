@@ -1,7 +1,16 @@
 from django.db import models
+from django.utils import timezone
 
 from users.models import CustomUser
 from django.utils.translation import gettext_lazy as _
+
+
+class Document(models.Model):
+    file = models.FileField(upload_to='exam_documents/', blank=True, null=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.file.name
 
 
 class Exam(models.Model):
@@ -10,10 +19,10 @@ class Exam(models.Model):
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, verbose_name='created_by')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='created_at')
     subject = models.CharField(_("subject"), max_length=100)
-    date = models.DateField(_("exam date"))
+    date = models.DateField(_("exam date"), default=timezone.now())
     total_marks = models.IntegerField(default=0, blank=True, null=True)
-    document = models.FileField(upload_to='exam_documents/', blank=True, null=True)
     marking_scheme = models.TextField(_("marking scheme"), blank=True)
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, blank=True, null=True)  # ForeignKey relationship
 
     def __str__(self):
         return self.title

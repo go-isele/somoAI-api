@@ -13,7 +13,7 @@ from rest_framework import status
 from api.mixins import ApiAuthMixin
 from .utils import upload_file, generate_completion, process_answer, gemini_completion
 
-from exams.models import Exam, AnswerFile, StudentExam
+from exams.models import Exam, AnswerFile, StudentExam, Document
 from exams.serializer import ExamSerializer, AnswerFileSerializer, StudentExamSerializer, ExamDocumentSerializer
 
 
@@ -37,22 +37,27 @@ class ExamView(ApiAuthMixin, APIView):
 
 
 class ExamDocumentUploadView(APIView):
-    parser_class = (FileUploadParser, JSONParser)
+    parser_class = (FileUploadParser,)
 
     def post(self, request, *args, **kwargs):
-        serializer = ExamDocumentSerializer(data=request.data)
-        if serializer.is_valid():
-            document = serializer.validated_data['document']
-            # Save the document to your Exam model or perform any other actions
-            exam = Exam.objects.create(document=document)
-            return Response(
-                {
-                    'message': 'Exam document uploaded successfully'
-                },
-                status=status.HTTP_201_CREATED
-            )
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # Get the uploaded file from the request
+            uploaded_file = request.data['document']
+
+            # Create a new Document instance with the uploaded file
+            document = Document.objects.create(file=uploaded_file)
+
+            # Create a new Exam instance and associate it with the created Document
+            exam_data = request.data.copy()
+            exam_data['document'] = document.id  # Associate the document with the exam
+            exam_serializer = ExamSerializer(data=exam_data)
+            if exam_serializer.is_valid():
+                exam_serializer.save()
+                return Response(exam_serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(exam_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class AnswerFileAPIView(ApiAuthMixin, APIView):

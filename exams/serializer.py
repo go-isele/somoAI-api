@@ -8,7 +8,7 @@ class ExamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Exam
-        fields = ['id', 'created_by', 'subject', 'date', 'score']
+        fields = ['id', 'created_by', 'subject', 'date']
 
 
 class AnswerFileSerializer(serializers.ModelSerializer):
